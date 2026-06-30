@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ask DCO.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;900&display=swap" rel="stylesheet">
+<style>
+  :root{ color-scheme:light; }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0; background:#fff; color:#0d0d0d;
+    font-family:Inter,-apple-system,Segoe UI,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; display:flex; align-items:center; justify-content:center;
+  }
+  .wrap{ width:100%; max-width:880px; padding:40px 36px; }
+  .brand{ font-weight:900; font-size:46px; letter-spacing:-.02em; line-height:1; }
+  .accent{ font-family:Georgia,'Times New Roman',serif; font-style:italic; font-size:19px; color:#555; margin-top:6px;}
+  .sub{ font-size:15px; color:#666; margin-top:18px; line-height:1.5; max-width:560px;}
+  .barRow{ display:flex; gap:10px; margin-top:20px; }
+  #q{ flex:1; padding:16px 18px; font-size:16px; font-family:inherit; border:1.5px solid #161616; border-radius:10px; outline:none; background:#fff; color:#0d0d0d; }
+  #q::placeholder{ color:#9a9a9a; }
+  #ask{ padding:0 26px; font-size:15px; font-weight:600; font-family:inherit; cursor:pointer; border:none; border-radius:10px; background:#0d0d0d; color:#fff; }
+  #ask:disabled{ opacity:.45; cursor:default; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .chip{ padding:9px 14px; font-size:13px; font-family:inherit; cursor:pointer; color:#222; border:1px solid #ddd; border-radius:999px; background:#fafafa; }
+  .chip:hover{ border-color:#161616; }
+  .answer{ margin-top:26px; padding:24px 26px; border:1px solid #ececec; border-radius:14px; background:#fbfbfb; font-size:16px; line-height:1.62; white-space:pre-wrap; display:none; }
+  .answer.show{ display:block; }
+  .qline{ font-weight:700; margin-bottom:12px; }
+  .foot{ margin-top:34px; font-size:11.5px; color:#b3b3b3; letter-spacing:.05em; display:flex; justify-content:space-between; }
+  .cursor{ display:inline-block; width:8px; background:#0d0d0d; margin-left:1px; animation:bl 1s steps(1) infinite; }
+  @keyframes bl{ 50%{opacity:0} }
+  .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2 class="sr-only">Ask DCO: a prompt bar that answers questions about the production company Dolsten &amp; Co.</h2>
+  <div class="brand">DCO.</div>
+  <div class="accent">Handmade AI</div>
+  <div class="sub">Don't just read the deck. Ask it anything about how Dolsten &amp; Co. makes AI-driven work for Havas Health &amp; Sanofi.</div>
+
+  <div class="barRow">
+    <input id="q" type="text" placeholder="Ask DCO anything…" autocomplete="off" aria-label="Ask DCO a question">
+    <button id="ask">Ask</button>
+  </div>
+  <div class="chips" id="chips"></div>
+
+  <div class="answer" id="answer" aria-live="polite"></div>
+
+  <div class="foot"><span>DOLSTEN &amp; CO.</span><span>Handmade AI</span></div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG
+   USE_LIVE_AI = false  → fully self-contained, no backend, no key.
+                          Works the instant it's hosted (incl. GitHub Pages).
+   USE_LIVE_AI = true   → free-form answers via /api/ask (see api/ask.js).
+                          Requires a serverless host (Vercel/Netlify) + API key.
+   ============================================================ */
+const USE_LIVE_AI = false;
+
+const BANK = [
+  { k:['approach','handmade','how do you work','how does it work','process','what do you do','overview','explain'],
+    a:`Our whole approach is one idea we call Handmade AI: a human hand directs every frame, and every generation is seeded from something real — your brand, your product, your people. Never fully AI, never from nothing.
+
+It runs in three moves. We build the world (green-screen environments generated from a brand-trained, commercially-safe model). We capture the people (real talent, always). And we make it scale (one capture feeding many audiences, formats and languages).
+
+The goal isn't to show off the technology. It's to make work where you can't tell the AI is there at all.` },
+
+  { k:['real','avatar','synthetic','heygen','fake','clone','deepfake','digital human'],
+    a:`Real people. Always. We generate people the old-fashioned way — with a camera. We will never build you a fake doctor.
+
+We can build synthetic avatars; we choose not to for hero work, because in a category built on trust a real expert is an asset and a fake one is a liability. If AI ever touches a performance — a dialogue update, a localization lip-sync — it's opt-in only, with the talent's consent and MLR sign-off. A governed feature, never a default.
+
+That's the thesis: in an industry built on trust, the most breakthrough thing AI can do is disappear.` },
+
+  { k:['pharma','mlr','compliance','legal','governance','regulated','rights','consent','firefly','vermeer','safe'],
+    a:`Governance isn't our fine print — it's part of the craft. The entire generative process runs on a commercially-safe platform (Adobe Firefly), built to clear legal, IT and Sanofi review, and to coexist with your internal Vermeer hub rather than compete with it.
+
+Likeness and consent are explicit, usage terms defined, performance edits opt-in only, and versioning is built for MLR. We name the risks out loud too — rights duration, approval lead time, tool review, model drift — and how we mitigate each.
+
+In a trust business, the legal is the creative.` },
+
+  { k:['cost','save','money','efficient','budget','faster','cheaper','efficiency','roi','price of','expensive'],
+    a:`Shoot a day, feed a year. One controlled capture becomes many audiences, channels, formats and languages — so you get more content from fewer shoots, lower post cost, and faster delivery.
+
+It compounds. Because the model is trained on your brand, every new spot is faster and more on-brand than the last. You're not buying a single film; you're building a content engine that gets cheaper to run over time.
+
+And none of that efficiency comes at the cost of craft — that's the part most AI gets wrong.` },
+
+  { k:['why you','why dco','different','competitor','pick','choose','stand out','better','differentiat'],
+    a:`Three reasons. Craft that scales — handmade, trained on your brand, getting more on-brand as it grows, not more generic. Real where it matters — never synthetic humans, trust built into the model. And a system, not a spot — an engine that lowers cost and shortens timelines over time.
+
+Most partners will pitch you AI that shouts. We make AI that disappears. In a trust category, that's the difference between a gimmick and an asset.
+
+We don't want to deliver a project. We want to help you build the engine.` },
+
+  { k:['capture','kol','expert','patient','ambassador','once','reuse','future proof','future-proof','talking head','hcp'],
+    a:`We capture your expert, patient or ambassador once — and bank everything that future-proofs the performance: multiple angles, clean plates, full lighting reference, isolated audio, signed likeness rights.
+
+That one session becomes a library that doesn't expire. We re-version, re-frame and re-localize for years, building new worlds around a fixed, real performance — without bringing the talent back to set.
+
+Real human. Infinite reuse. No reshoot.` },
+
+  { k:['localize','localis','language','market','translate','global','version','dub'],
+    a:`We localize by re-versioning the world around a fixed, real performance — new environments, framings, formats and lengths from one capture.
+
+The honest way: re-record, re-caption, re-build, while the human performance stays untouched and real. If a market needs an AI dialogue or lip-sync edit, that's opt-in only, with consent and MLR sign-off.
+
+One performance. Every market. No reshoot.` },
+
+  { k:['green screen','greenscreen','stage','environment','world','build the world','shoot','location','previs','pre-vis'],
+    a:`We make the ad before we shoot it. We ingest your brand assets and train a commercially-safe model, then generate consistent, on-brand environments and pre-visualize the finished film — so the DP lights to the render and every department executes against a locked visual.
+
+Then we shoot real talent on a single green-screen stage. One stage becomes every location: full lighting control, no location or weather risk, a high hero count in a compressed schedule.
+
+It's easier to shoot something when you've already seen it.` },
+
+  { k:['scale','engine','system','ecosystem','repeatable','long term','long-term','partner','roster'],
+    a:`This isn't one beautiful spot — it's a living content engine. The model we train on your brand keeps producing stills and motion for years, and gets faster every time.
+
+Most AI dilutes the more you use it. Ours concentrates — because it's trained on your craft, scale makes it more you, not more generic.
+
+That's the long-term play: not a vendor on a roster, but the partner who builds and operates your content engine.` },
+
+  { k:['who','leadership','team','founder','case stud','reel','names','contact','price','pricing','cost to','quote'],
+    a:`Specifics like leadership, director reels, case studies and pricing are best walked through live with the team.
+
+What I can tell you is the shape of who we are: a craft-led production company that uses AI to make the work, not to replace the making of it. Real people, handmade craft, governed for pharma, built to scale.
+
+Ask me about the approach, real people vs. synthetic, pharma compliance, cost, or why us.` }
+];
+
+const FALLBACK = `Good question — and one I'd happily have the team walk you through live. The short version of how DCO thinks: in an industry built on trust, the most breakthrough thing AI can do is disappear. We make Handmade AI — real people, real craft, governed for pharma, built to scale.
+
+Try asking about our approach, real people vs. avatars, pharma compliance, cost savings, or why us.`;
+
+const chipsData = [
+  "What's your approach to AI?",
+  "Do you use real people or avatars?",
+  "How do you handle pharma compliance?",
+  "How does this save money?",
+  "Why should we pick you?"
+];
+
+const qEl=document.getElementById('q'), askEl=document.getElementById('ask'), ansEl=document.getElementById('answer'), chipsEl=document.getElementById('chips');
+chipsData.forEach(c=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=c; b.onclick=()=>{ qEl.value=c; run(); }; chipsEl.appendChild(b); });
+
+function route(q){
+  const s=q.toLowerCase(); let best=null, bestScore=0;
+  for(const item of BANK){ let sc=0; for(const kw of item.k){ if(s.indexOf(kw)>-1) sc++; } if(sc>bestScore){ bestScore=sc; best=item; } }
+  return bestScore>0 ? best.a : FALLBACK;
+}
+
+let typing=null;
+function typewrite(text){
+  clearInterval(typing);
+  const body=document.createElement('span'); ansEl.appendChild(body);
+  const cur=document.createElement('span'); cur.className='cursor'; cur.innerHTML='&nbsp;'; ansEl.appendChild(cur);
+  let i=0;
+  typing=setInterval(()=>{ body.textContent=text.slice(0,i); i+=3; if(i>=text.length){ body.textContent=text; clearInterval(typing); cur.remove(); } }, 12);
+}
+
+async function run(){
+  const q=qEl.value.trim(); if(!q) return;
+  askEl.disabled=true; ansEl.classList.add('show');
+  ansEl.innerHTML=''; const ql=document.createElement('div'); ql.className='qline'; ql.textContent=q; ansEl.appendChild(ql);
+  let text;
+  if(USE_LIVE_AI){
+    try{
+      const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})});
+      const d=await r.json(); text=d.answer||FALLBACK;
+    }catch(e){ text=route(q); }
+  } else {
+    text=route(q);
+  }
+  typewrite(text); askEl.disabled=false;
+}
+
+askEl.onclick=run;
+qEl.addEventListener('keydown',e=>{ if(e.key==='Enter') run(); });
+</script>
+</body>
+</html>
